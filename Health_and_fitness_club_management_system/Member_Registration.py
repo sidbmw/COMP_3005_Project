@@ -1,26 +1,26 @@
 # Import necessary libraries
 import psycopg2
 import PySimpleGUI as sg
-import re  # Additional imports for validation
+import re  # For email validation
+from db_config import get_db_connection  # Import centralized database connection
+
+# Connect to the database
+con = get_db_connection()
+cur = con.cursor()
 
 # Function to run the member registration process
 def run_member_registration():
-    # Connect to the database
-    con = psycopg2.connect(
-        dbname='your_dbname',
-        user='your_username',
-        password='your_password',
-        host='localhost'
-    )
-    cur = con.cursor()
+    # Predefined fitness goals
+    fitness_goals = ['Lose weight', 'Gain muscle', 'Improve stamina', 'Increase flexibility']
     
     # Define the layout for the registration form
     layout = [
         [sg.Text('Member Registration', size=(30, 1), justification='center', font=("Helvetica", 25))],
         [sg.Text('Name:', size=(15, 1)), sg.InputText()],
         [sg.Text('Email:', size=(15, 1)), sg.InputText()],
-        [sg.Text('Fitness Goal:', size=(15, 1)), sg.InputText()],
-        [sg.Text('Health Metrics:', size=(15, 1)), sg.InputText()],
+        [sg.Text('Password:', size=(15, 1)), sg.InputText(password_char='*')],  # Added password field
+        [sg.Text('Fitness Goal:', size=(15, 1)), sg.Combo(fitness_goals, default_value=fitness_goals[0])],
+        [sg.Text('Health Metrics:', size=(15, 1)), sg.InputText(), sg.Text('Example: BMI:25, Body Fat:20%')],
         [sg.Submit(), sg.Cancel()]
     ]
     
@@ -32,12 +32,13 @@ def run_member_registration():
         pattern = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
         return re.match(pattern, email, re.I)
 
-    # Function to validate fitness goal and health metrics (placeholder for actual validation logic)
+    # Function to validate fitness goal and health metrics
     def validate_fitness_goal(goal):
-        # Implementing specific validation for fitness goals
-        # Example: Goal must be a numeric value followed by "kg" for weight or "weeks" for time-based goals
-        pattern = r'^\d+(\.\d+)?\s?(kg|weeks)$'
-        return re.match(pattern, goal, re.I)
+        # Accepting any predefined fitness goals from the dropdown menu
+        if goal in fitness_goals:
+            return True
+        else:
+            return False
 
     def validate_health_metrics(metrics):
         # Implementing specific validation for health metrics
@@ -52,7 +53,7 @@ def run_member_registration():
             break
         elif event == 'Submit':
             # Extract values
-            name, email, fitness_goal, health_metrics = values[0], values[1], values[2], values[3]
+            name, email, password, fitness_goal, health_metrics = values[0], values[1], values[2], values[3], values[4]
             
             # Perform validations
             if not validate_email(email):
@@ -65,21 +66,34 @@ def run_member_registration():
                 sg.Popup('Invalid health metrics. Please enter valid metrics.')
                 continue
             
-            # Placeholder for database insertion logic
+            # Database insertion logic
             try:
-                # Assuming a table named 'MEMBERS' with columns 'NAME', 'EMAIL', 'FITNESS_GOAL', 'HEALTH_METRICS'
+                # Assuming a table named 'USERS' with columns 'USER_ID', 'USERNAME', 'PASSWORD', 'EMAIL', 'ROLE'
+                # and a table named 'MEMBERS' with columns 'MEMBER_ID', 'USER_ID', 'FITNESS_GOAL', 'HEALTH_METRICS'
                 cur.execute("""
-                    INSERT INTO MEMBERS (NAME, EMAIL, FITNESS_GOAL, HEALTH_METRICS)
+                    INSERT INTO USERS (USERNAME, PASSWORD, EMAIL, ROLE)
+                    VALUES (%s, %s, %s, 'member') RETURNING USER_ID""",
+                    (name, password, email)
+                )
+                user_id = cur.fetchone()[0]
+                cur.execute("""
+                    INSERT INTO MEMBERS (USER_ID, NAME, FITNESS_GOAL, HEALTH_METRICS)
                     VALUES (%s, %s, %s, %s)""",
-                    (name, email, fitness_goal, health_metrics)
+                    (user_id, name, fitness_goal, health_metrics)
                 )
                 con.commit()
                 sg.Popup('Member registration successful.')
+                window.close()  # Close the registration window
             except psycopg2.DatabaseError as e:
-                sg.Popup('Database error:', e)
+                print('Database error:', e)
     
     window.close()
-
-# Call the function to run the program
-if __name__ == '__main__':
-    run_member_registration()
+# Function to run the main window (assuming this function exists)
+def run_main_window():
+    # Define the layout for the main window
+    layout = [
+        # Layout elements for the main window
+    ]
+    
+    # Create and display the main window
+    window = sg.Window('Main Window', layout).read(close=True)
