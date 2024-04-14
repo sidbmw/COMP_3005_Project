@@ -1,6 +1,6 @@
 -- DDL for Health and Fitness Club Management System
 
--- Users Table
+-- Adding Users Table
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
@@ -10,7 +10,7 @@ CREATE TABLE users (
     CHECK (role IN ('member', 'trainer', 'admin'))
 );
 
--- Members Table
+-- Adding Members Table
 CREATE TABLE members (
     member_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE members (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- Trainers Table
+-- Adding Trainers Table
 CREATE TABLE trainers (
     trainer_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE trainers (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- Equipment Table
+-- Adding Equipment Table
 CREATE TABLE equipment (
     equipment_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -37,14 +37,14 @@ CREATE TABLE equipment (
     CHECK (status IN ('available', 'maintenance', 'unavailable'))
 );
 
--- Rooms Table
+-- Adding Rooms Table
 CREATE TABLE rooms (
     room_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     capacity INT NOT NULL
 );
 
--- Schedule Table
+-- Adding Schedule Table
 CREATE TABLE schedule (
     schedule_id SERIAL PRIMARY KEY,
     trainer_id INT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE schedule (
     FOREIGN KEY (member_id) REFERENCES members(member_id)
 );
 
--- Booking Table
+-- Adding Booking Table
 CREATE TABLE booking (
     booking_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE booking (
     CHECK (start_time < end_time)
 );
 
--- Class Schedule Table
+-- Adding Class Schedule Table
 CREATE TABLE class_schedule (
     class_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE class_schedule (
     CHECK (start_time < end_time)
 );
 
--- Payment Table
+-- Adding Payment Table
 CREATE TABLE payment (
     payment_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE payment (
     FOREIGN KEY (member_id) REFERENCES members(member_id)
 );
 
--- Feedback Table
+-- Adding Feedback Table
 CREATE TABLE feedback (
     feedback_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
@@ -100,4 +100,37 @@ CREATE TABLE feedback (
     FOREIGN KEY (member_id) REFERENCES members(member_id)
 );
 
--- Ensure all necessary tables and constraints are included as per your schema
+-- Adding Exercise Routines Table
+CREATE TABLE exercise_routines (
+    routine_id SERIAL PRIMARY KEY,
+    member_id INT NOT NULL,
+    routine_details TEXT NOT NULL,
+    FOREIGN KEY (member_id) REFERENCES members(member_id)
+);
+
+-- Adding Fitness Achievements Table
+CREATE TABLE fitness_achievements (
+    achievement_id SERIAL PRIMARY KEY,
+    member_id INT NOT NULL,
+    achievement_details TEXT NOT NULL,
+    achievement_date DATE NOT NULL,
+    FOREIGN KEY (member_id) REFERENCES members(member_id)
+);
+
+-- Adding Class Registrations Table
+CREATE TABLE class_registrations (
+    registration_id SERIAL PRIMARY KEY,
+    member_id INT NOT NULL,
+    class_id INT NOT NULL,
+    FOREIGN KEY (member_id) REFERENCES members(member_id),
+    FOREIGN KEY (class_id) REFERENCES class_schedule(class_id)
+);
+
+-- Adding Trainer Schedule Table
+CREATE TABLE IF NOT EXISTS trainer_schedule (
+    schedule_id SERIAL PRIMARY KEY,
+    trainer_id INT NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id)
+);

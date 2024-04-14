@@ -1,37 +1,32 @@
-# Billing_and_Payment_Processing.py
-# Import necessary libraries
 import psycopg2
 from datetime import datetime
 import PySimpleGUI as sg
-from db_config import get_db_connection  # Import centralized database connection
+from db_config import get_db_connection  # Get database connection from configuration.
 
-# Connect to the database
-conn = get_db_connection()  # Use centralized database connection
+# Establish database connection.
+conn = get_db_connection()
 cur = conn.cursor()
 
-# Function to generate bills for members
+# Generate bills for club members.
 def generate_bill(member_id):
-    # Enhanced logic for bill generation
-    # This now involves querying the database for services used by the member and calculating the total amount due
     print(f"Generating bill for member ID: {member_id}")
-    # Query the database for services used
+    # Retrieve services used by the member.
     cur.execute("SELECT service, cost FROM services_used WHERE member_id = %s", (member_id,))
     services = cur.fetchall()
-    bill_amount = sum(cost for service, cost in services)  # Calculate total amount due
+    # Sum up the total cost.
+    bill_amount = sum(cost for service, cost in services)
     return bill_amount
 
-# Function to process payments
+# Handle payment processing.
 def process_payment(member_id, amount):
-    # Enhanced logic for payment processing
-    # This simulates integrating with a payment service and updates the payment status in the database
     print(f"Processing payment of ${amount} for member ID: {member_id}")
-    # Simulate payment processing by updating the database
+    # Update payment status in the database.
     cur.execute("UPDATE payments SET status = 'Processed' WHERE member_id = %s", (member_id,))
     conn.commit()
     payment_status = "Processed"
     return payment_status
 
-# GUI layout for billing and payment processing
+# Setup the GUI layout.
 layout = [
     [sg.Text('Billing and Payment Processing')],
     [sg.Text('Member ID'), sg.InputText()],
@@ -40,10 +35,10 @@ layout = [
     [sg.Output(size=(60,20))]
 ]
 
-# Create the window
+# Initialize the window.
 window = sg.Window('Billing and Payment Processing', layout)
 
-# Event loop
+# Handle window events.
 while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED:
